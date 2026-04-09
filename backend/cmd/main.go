@@ -18,6 +18,10 @@ func main() {
 	//koneksi ke db
 	database.Connect(cfg)
 
+	//migration seeder
+	database.Migrate()
+	database.Seed()
+
 	//init fiber
 	app := fiber.New(fiber.Config{
 		//pesan error saat panic

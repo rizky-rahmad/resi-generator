@@ -1,0 +1,425 @@
+{
+  "info": {
+    "name": "Resi Generator API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080" },
+    { "key": "token_admin", "value": "" },
+    { "key": "token_kerani", "value": "" },
+    { "key": "invoice_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Health Check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Success true', () => {",
+              "  const res = pm.response.json();",
+              "  pm.expect(res.success).to.be.true;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/health"
+      }
+    },
+    {
+      "name": "2. Login Admin - Sukses",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Success true', () => {",
+              "  const res = pm.response.json();",
+              "  pm.expect(res.success).to.be.true;",
+              "  pm.expect(res.data.token).to.be.a('string');",
+              "  pm.expect(res.data.role).to.equal('admin');",
+              "  pm.collectionVariables.set('token_admin', res.data.token);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/api/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\": \"admin\", \"password\": \"admin123\"}"
+        }
+      }
+    },
+    {
+      "name": "3. Login Kerani - Sukses",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Role kerani', () => {",
+              "  const res = pm.response.json();",
+              "  pm.expect(res.data.role).to.equal('kerani');",
+              "  pm.collectionVariables.set('token_kerani', res.data.token);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/api/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\": \"kerani\", \"password\": \"kerani123\"}"
+        }
+      }
+    },
+    {
+      "name": "4. Login - Kredensial Salah",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 401', () => pm.response.to.have.status(401));",
+              "pm.test('Success false', () => {",
+              "  const res = pm.response.json();",
+              "  pm.expect(res.success).to.be.false;",
+              "  pm.expect(res.message).to.equal('username atau password salah');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/api/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\": \"admin\", \"password\": \"passwordsalah\"}"
+        }
+      }
+    },
+    {
+      "name": "5. Login - Body Kosong",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 400', () => pm.response.to.have.status(400));",
+              "pm.test('Success false', () => {",
+              "  const res = pm.response.json();",
+              "  pm.expect(res.success).to.be.false;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/api/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        }
+      }
+    },
+    {
+      "name": "6. Get Items - Tanpa Filter",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Return array items', () => {",
+              "  const res = pm.response.json();",
+              "  pm.expect(res.success).to.be.true;",
+              "  pm.expect(res.data).to.be.an('array');",
+              "  pm.expect(res.data.length).to.be.greaterThan(0);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/items"
+      }
+    },
+    {
+  "name": "7. Get Items - Filter by Code",
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "exec": [
+          "pm.test('Status 200', () => pm.response.to.have.status(200));",
+          "pm.test('Return filtered items', () => {",
+          "  const res = pm.response.json();",
+          "  pm.expect(res.data).to.be.an('array');",
+          "  res.data.forEach(item => {",
+          "    pm.expect(item.code.toUpperCase()).to.include('BRG-001');",
+          "  });",
+          "});"
+        ]
+      }
+    }
+  ],
+  "request": {
+    "method": "GET",
+    "url": "{{base_url}}/api/items?code=BRG-001"
+  }
+},
+{
+  "name": "8. Get Items - Code Tidak Ada",
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "exec": [
+          "pm.test('Status 200', () => pm.response.to.have.status(200));",
+          "pm.test('Return empty array', () => {",
+          "  const res = pm.response.json();",
+          "  pm.expect(res.data).to.be.an('array');",
+          "  pm.expect(res.data.length).to.equal(0);",
+          "});"
+        ]
+      }
+    }
+  ],
+  "request": {
+    "method": "GET",
+    "url": "{{base_url}}/api/items?code=XYZ-999"
+  }
+},
+    {
+      "name": "9. Create Invoice - Tanpa Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 401', () => pm.response.to.have.status(401));",
+              "pm.test('Token tidak ditemukan', () => {",
+              "  const res = pm.response.json();",
+              "  pm.expect(res.message).to.equal('Token tidak ditemukan');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/api/invoices",
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        }
+      }
+    },
+    {
+      "name": "10. Create Invoice - Token Invalid",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 401', () => pm.response.to.have.status(401));",
+              "pm.test('Token tidak valid', () => {",
+              "  const res = pm.response.json();",
+              "  pm.expect(res.success).to.be.false;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer tokeninvalid" }
+        ],
+        "url": "{{base_url}}/api/invoices",
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        }
+      }
+    },
+    {
+      "name": "11. Create Invoice - Sukses (Admin)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "pm.test('Invoice berhasil dibuat', () => {",
+              "  const res = pm.response.json();",
+              "  pm.expect(res.success).to.be.true;",
+              "  pm.expect(res.data.invoice_number).to.be.a('string');",
+              "  pm.expect(res.data.total_amount).to.be.a('number');",
+              "  pm.expect(res.data.details).to.be.an('array');",
+              "  pm.expect(res.data.details.length).to.equal(2);",
+              "  pm.collectionVariables.set('invoice_id', res.data.id);",
+              "});",
+              "pm.test('Zero-Trust: total dihitung backend', () => {",
+              "  const res = pm.response.json();",
+              "  const expectedTotal = (8500000 * 2) + (350000 * 1);",
+              "  pm.expect(res.data.total_amount).to.equal(expectedTotal);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+        ],
+        "url": "{{base_url}}/api/invoices",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sender_name\": \"PT Maju Jaya\",\n  \"sender_address\": \"Jl. Sudirman No. 1, Jakarta\",\n  \"receiver_name\": \"CV Berkah Abadi\",\n  \"receiver_address\": \"Jl. Gatot Subroto No. 5, Bandung\",\n  \"items\": [\n    { \"item_id\": 1, \"quantity\": 2 },\n    { \"item_id\": 2, \"quantity\": 1 }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "12. Create Invoice - Body Tidak Lengkap",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 400', () => pm.response.to.have.status(400));",
+              "pm.test('Validasi error', () => {",
+              "  const res = pm.response.json();",
+              "  pm.expect(res.success).to.be.false;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+        ],
+        "url": "{{base_url}}/api/invoices",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sender_name\": \"PT Maju Jaya\"\n}"
+        }
+      }
+    },
+    {
+      "name": "13. Create Invoice - Items Kosong",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 400', () => pm.response.to.have.status(400));",
+              "pm.test('Items wajib ada', () => {",
+              "  const res = pm.response.json();",
+              "  pm.expect(res.success).to.be.false;",
+              "  pm.expect(res.message).to.include('minimal 1 item');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+        ],
+        "url": "{{base_url}}/api/invoices",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sender_name\": \"PT Maju Jaya\",\n  \"sender_address\": \"Jl. Sudirman No. 1\",\n  \"receiver_name\": \"CV Berkah\",\n  \"receiver_address\": \"Jl. Gatot No. 5\",\n  \"items\": []\n}"
+        }
+      }
+    },
+    {
+      "name": "14. Create Invoice - Item ID Tidak Ada di DB",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 500', () => pm.response.to.have.status(500));",
+              "pm.test('Item tidak ditemukan', () => {",
+              "  const res = pm.response.json();",
+              "  pm.expect(res.success).to.be.false;",
+              "  pm.expect(res.message).to.include('tidak ditemukan');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+        ],
+        "url": "{{base_url}}/api/invoices",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sender_name\": \"PT Maju Jaya\",\n  \"sender_address\": \"Jl. Sudirman No. 1\",\n  \"receiver_name\": \"CV Berkah\",\n  \"receiver_address\": \"Jl. Gatot No. 5\",\n  \"items\": [\n    { \"item_id\": 9999, \"quantity\": 1 }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "15. Create Invoice - Kerani Juga Bisa Submit",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "pm.test('Kerani berhasil buat invoice', () => {",
+              "  const res = pm.response.json();",
+              "  pm.expect(res.success).to.be.true;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token_kerani}}" }
+        ],
+        "url": "{{base_url}}/api/invoices",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sender_name\": \"Gudang Pusat\",\n  \"sender_address\": \"Jl. Industri No. 10\",\n  \"receiver_name\": \"Toko ABC\",\n  \"receiver_address\": \"Jl. Pasar No. 3\",\n  \"items\": [\n    { \"item_id\": 3, \"quantity\": 1 }\n  ]\n}"
+        }
+      }
+    }
+  ]
+}

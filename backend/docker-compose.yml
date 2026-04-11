@@ -30,7 +30,7 @@ services:
     environment:
       APP_PORT: 8080
       APP_ENV: production
-      DB_HOST: db          # ← HARDCODED "db", BUKAN ${DB_HOST}
+      DB_HOST: db         
       DB_PORT: 5432
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
@@ -40,7 +40,21 @@ services:
       db:
         condition: service_healthy
 
-  # Pindahkan newman ke sini, sejajar dengan db dan backend
+  
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: resi_generator_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:${APP_PORT}/api
+    depends_on:
+      - backend
+
+  
   newman:
     image: postman/newman:alpine
     container_name: resi_generator_test
@@ -53,7 +67,7 @@ services:
     profiles:
       - test  # hanya jalan kalau dipanggil dengan --profile test
 
-# volumes dipindahkan ke paling bawah (sejajar dengan services)
+
 volumes:
   postgres_data:
     driver: local
